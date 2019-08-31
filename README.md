@@ -17,18 +17,18 @@ This script fetches the PyTricks you receive on the Gmail API and sends them to 
 
 ## Installing
 
-Clone the repository:
+1. Clone the repository:
 ```bash
 git clone https://github.com/meroupatate/pytricks-discord-bot.git
 ```
 
-Install the python dependencies:
+2. Install the python dependencies:
 ```bash
 cd pytricks-discord-bot
 pip3 install -r requirements.txt
 ```
 
-Follow the [Python Quickstart tutorial](https://developers.google.com/gmail/api/quickstart/python) to get you Gmail API credentials:
+3. Follow the [Python Quickstart tutorial](https://developers.google.com/gmail/api/quickstart/python) to get you Gmail API credentials:
 - Enable the Gmail API
 - Save your credentials.json file
 - Copy the script [quickstart.py](https://github.com/gsuitedevs/python-samples/blob/master/gmail/quickstart/quickstart.py) and make sure to allow read AND write operations by replacing the line
@@ -44,12 +44,12 @@ SCOPES = ['https://www.googleapis.com/auth/gmail.modify']
 This script should generate a `token.pickle` file that you will need to connect to the Gmail API.
 
 
-Once done with the steps above, put `token.pickle` in the git repository you previously cloned:
+4. Once done with the steps above, put `token.pickle` in the git repository you previously cloned:
 ```bash
 mv token.pickle /path/to/pytricks-discord-bot
 ```
 
-Edit `.env.example` and replace the link with a webhook from your Discord server (click [here](https://support.discordapp.com/hc/en-us/articles/228383668-Intro-to-Webhooks) for more information on how to create your webhook):
+5. Edit `.env.example` and replace the link with a webhook from your Discord server (click [here](https://support.discordapp.com/hc/en-us/articles/228383668-Intro-to-Webhooks) for more information on how to create your webhook):
 
 ```bash
 mv .env.example .env
@@ -57,5 +57,5 @@ vim .env
 # DISCORD_WEBHOOK = 'https://discordapp.com/api/webhooks/xxxx/yyyyyyy'
 ```
 
-If everything went fine, you should now be able to launch `get_tricks.py`. Keep it running with a systemd service or nohup to receive your PyTricks on Discord :D
+6. If everything went fine, you should now be able to launch `get_tricks.py`. Keep it running with a systemd service or nohup to receive your PyTricks on Discord :D
 ``` nohup python3 get_tricks.py & ```
