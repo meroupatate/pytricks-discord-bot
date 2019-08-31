@@ -32,10 +32,12 @@ Follow the [Python Quickstart tutorial](https://developers.google.com/gmail/api/
 - Enable the Gmail API
 - Save your credentials.json file
 - Copy the script [quickstart.py](https://github.com/gsuitedevs/python-samples/blob/master/gmail/quickstart/quickstart.py) and make sure to allow read AND write operations by replacing the line
-```SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
+```
+SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
 ```
 by
-```SCOPES = ['https://www.googleapis.com/auth/gmail.modify']
+```
+SCOPES = ['https://www.googleapis.com/auth/gmail.modify']
 ```
 (this script won't work as expected if it has no write permissions)
 - Run the modified quickstart.py on a machine with a web browser and give the required authorizations when they ask you to
