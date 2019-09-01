@@ -7,12 +7,14 @@ from os import getenv
 import requests
 from dotenv import load_dotenv
 from googleapiclient.discovery import build
+from structlog import get_logger
 from time import sleep
 from timeloop import Timeloop
 
 load_dotenv()
 webhook = getenv('DISCORD_WEBHOOK')
 tl = Timeloop()
+log = get_logger()
 
 
 @tl.job(interval=timedelta(seconds=10))
@@ -24,15 +26,14 @@ def main():
     messages = get_new_pytricks(service)
 
     if not len(messages):
-        print('No new messages found.')
-    else:
-        print(f'Found {len(messages)} new message(s)')
-        for message in messages:
-            subject, content = get_content(message)
-            print(subject)
-            status_code = send_to_webhook(subject, content)
-            if status_code == 204:
-                mark_as_read(service, message)
+        return
+    log.info(f'Found new message(s)', number=len(messages))
+    for message in messages:
+        subject, content = get_content(message)
+        log.info(subject=subject)
+        status_code = send_to_webhook(subject, content)
+        if status_code == 204:
+            mark_as_read(service, message)
 
 
 def get_new_pytricks(service):
@@ -66,13 +67,13 @@ def mark_as_read(service, message):
     msgId = message['id']
     body = {"removeLabelIds": ["UNREAD"]}
     response = service.users().messages().modify(userId='me', id=msgId, body=body).execute()
-    print('Marked as read')
+    log.info('Marked as read', response=response)
 
 
 def send_to_webhook(subject, content):
     data = {'content': f'**{subject}**\n```python\n{content.split("------")[0]}```\n'}
     response = requests.post(webhook, json=data)
-    print('Sent to discord')
+    log.info('Sent to discord', response=response)
     return response.status_code
 
 
