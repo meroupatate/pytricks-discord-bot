@@ -1,13 +1,14 @@
-import pickle
 import base64
 import email
-import requests
-from os import getenv
-from timeloop import Timeloop
-from time import sleep
+import pickle
 from datetime import timedelta
+from os import getenv
+
+import requests
 from dotenv import load_dotenv
 from googleapiclient.discovery import build
+from time import sleep
+from timeloop import Timeloop
 
 load_dotenv()
 webhook = getenv('DISCORD_WEBHOOK')
@@ -35,12 +36,14 @@ def main():
 
 
 def get_new_pytricks(service):
-    results = service.users().messages().list(userId='me', labelIds=['INBOX', 'UNREAD'], q='from:info@realpython.com subject:[🐍pytricks]').execute()
+    results = service.users().messages().list(userId='me', labelIds=['INBOX', 'UNREAD'],
+                                              q='from:info@realpython.com subject:[🐍pytricks]').execute()
     messages = results.get('messages', [])
     if not messages:
         return []
     else:
-        return [service.users().messages().get(userId='me', id=message['id'], format='raw').execute() for message in messages]
+        return [service.users().messages().get(userId='me', id=message['id'], format='raw').execute() for message in
+                messages]
 
 
 def get_content(message):
