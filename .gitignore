@@ -2,5 +2,3 @@
 venv/
 token.pickle
 credentials.json
-requirements.in
-__pycache__/
