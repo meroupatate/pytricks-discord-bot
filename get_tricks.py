@@ -3,15 +3,18 @@ import base64
 import email
 import requests
 from os import getenv
+from timeloop import Timeloop
 from time import sleep
+from datetime import timedelta
 from dotenv import load_dotenv
 from googleapiclient.discovery import build
 
-
 load_dotenv()
 webhook = getenv('DISCORD_WEBHOOK')
+tl = Timeloop()
 
 
+@tl.job(interval=timedelta(seconds=10))
 def main():
     with open('token.pickle', 'rb') as token:
         creds = pickle.load(token)
@@ -70,8 +73,10 @@ def send_to_webhook(subject, content):
     return response.status_code
 
 
-if __name__ == '__main__':
-    while True:
-        main()
-        sleep(10)
-
+tl.start()
+while True:
+    try:
+        sleep(1)
+    except KeyboardInterrupt:
+        tl.stop()
+        break
