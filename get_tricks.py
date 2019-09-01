@@ -1,77 +1,77 @@
-import pickle
 import base64
 import email
-import requests
+import pickle
+from datetime import timedelta
 from os import getenv
-from time import sleep
-from dotenv import load_dotenv
-from googleapiclient.discovery import build
+from typing import Dict, List, Tuple
 
+import googleapiclient.discovery
+import requests
+from dotenv import load_dotenv
+from structlog import get_logger
+from timeloop import Timeloop
 
 load_dotenv()
 webhook = getenv('DISCORD_WEBHOOK')
+tl = Timeloop()
+log = get_logger()
 
 
-def main():
-    with open('token.pickle', 'rb') as token:
-        creds = pickle.load(token)
-    service = build('gmail', 'v1', credentials=creds)
-
-    messages = get_new_pytricks(service)
-
-    if not len(messages):
-        print('No new messages found.')
-    else:
-        print(f'Found {len(messages)} new message(s)')
-        for message in messages:
-            subject, content = get_content(message)
-            print(subject)
-            status_code = send_to_webhook(subject, content)
-            if status_code == 204:
-                mark_as_read(service, message)
-
-
-def get_new_pytricks(service):
-    results = service.users().messages().list(userId='me', labelIds=['INBOX', 'UNREAD'], q='from:info@realpython.com subject:[🐍pytricks]').execute()
+def get_new_pytricks(service: googleapiclient.discovery.Resource) -> List[Dict]:
+    results = service.users().messages().list(userId='me', labelIds=['INBOX', 'UNREAD'],
+                                              q='from:info@realpython.com subject:[🐍pytricks]').execute()
     messages = results.get('messages', [])
-    if not messages:
-        return []
-    else:
-        return [service.users().messages().get(userId='me', id=message['id'], format='raw').execute() for message in messages]
+    return [service.users().messages().get(userId='me', id=msg['id'], format='raw').execute() for msg in messages]
 
 
-def get_content(message):
+def extract_message_content(mime_msg: email.message.Message) -> str:
+    for part in mime_msg.get_payload():
+        if part.get_content_maintype() == 'text':
+            return part.get_payload(decode=True).decode()
+    return ''
+
+
+def get_content(message: Dict) -> Tuple[str, str]:
     msg = base64.urlsafe_b64decode(message['raw'].encode('ASCII'))
     mime_msg = email.message_from_bytes(msg)
     messageMainType = mime_msg.get_content_maintype()
     messageSubject = email.header.decode_header(mime_msg['subject'])[0][0].decode()
+
     if messageMainType == 'multipart':
-        messageContent = ""
-        for part in mime_msg.get_payload():
-            if part.get_content_maintype() == 'text':
-                messageContent = part.get_payload(decode=True).decode()
-                break
+        messageContent = extract_message_content(mime_msg)
     elif messageMainType == 'text':
         messageContent = mime_msg.get_payload(decode=True).decode()
     return messageSubject, messageContent
 
 
-def mark_as_read(service, message):
+def mark_as_read(service: googleapiclient.discovery.Resource, message: Dict) -> None:
     msgId = message['id']
     body = {"removeLabelIds": ["UNREAD"]}
     response = service.users().messages().modify(userId='me', id=msgId, body=body).execute()
-    print('Marked as read')
+    log.info('Marked as read', response=response)
 
 
-def send_to_webhook(subject, content):
+def send_to_webhook(subject: str, content: str) -> requests.models.Response:
     data = {'content': f'**{subject}**\n```python\n{content.split("------")[0]}```\n'}
-    response = requests.post(webhook, json=data)
-    print('Sent to discord')
-    return response.status_code
+    log.info('Sent to discord', subject=subject)
+    return requests.post(webhook, json=data)
+
+
+@tl.job(interval=timedelta(seconds=10))
+def main() -> None:
+    with open('token.pickle', 'rb') as token:
+        credentials = pickle.load(token)
+
+    service = googleapiclient.discovery.build('gmail', 'v1', credentials=credentials)
+    messages = get_new_pytricks(service)
+
+    for message in messages:
+        subject, content = get_content(message)
+        log.info('Found new message', subject=subject)
+        response = send_to_webhook(subject, content)
+        if response.status_code == 204:
+            mark_as_read(service, message)
 
 
 if __name__ == '__main__':
-    while True:
-        main()
-        sleep(10)
-
+    tl.start(block=True)

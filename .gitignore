@@ -1,4 +1,5 @@
 .env
+.idea/
 venv/
 token.pickle
 credentials.json
