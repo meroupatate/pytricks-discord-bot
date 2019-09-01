@@ -15,7 +15,7 @@ httplib2==0.13.1          # via google-api-python-client, google-auth-httplib2
 idna==2.8                 # via requests
 oauthlib==3.1.0           # via requests-oauthlib
 pyasn1-modules==0.2.6     # via google-auth
-pyasn1==0.4.6             # via pyasn1-modules, rsa
+pyasn1==0.4.7             # via pyasn1-modules, rsa
 python-dotenv==0.10.3
 requests-oauthlib==1.2.0  # via google-auth-oauthlib
 requests==2.22.0          # via requests-oauthlib
