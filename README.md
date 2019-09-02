@@ -7,6 +7,7 @@ Be notified on Discord when you receive a PyTrick from the Real Python newslette
 PyTricks are short python snippets sent to your email inbox by the [Real Python](https://realpython.com/) team. If you haven't done so, you can subscribe to their newsletter [here](https://realpython.com/newsletter/).
 
 This script fetches the PyTricks you receive on the Gmail API and sends them to a Discord server.
+![Example](https://github.com/meroupatate/pytricks-discord-bot/raw/master/images/screenshot.png)
 
 ## Prerequisites
 
