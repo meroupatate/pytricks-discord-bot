@@ -19,7 +19,7 @@ log = get_logger()
 
 def get_new_pytricks(service: googleapiclient.discovery.Resource) -> List[Dict]:
     results = service.users().messages().list(userId='me', labelIds=['INBOX', 'UNREAD'],
-                                              q='from:info@realpython.com subject:[🐍pytricks]').execute()
+            q='from:info@realpython.com subject:[🐍pytricks]').execute()
     messages = results.get('messages', [])
     return [service.users().messages().get(userId='me', id=msg['id'], format='raw').execute() for msg in messages]
 
@@ -52,6 +52,7 @@ def mark_as_read(service: googleapiclient.discovery.Resource, message: Dict) -> 
 
 
 def send_to_webhook(subject: str, content: str) -> requests.models.Response:
+    subject = subject.replace('_', '\_').replace('*', '\*')
     data = {'content': f'**{subject}**\n```python\n{content.split("------")[0]}```\n'}
     log.info('Sent to discord', subject=subject)
     return requests.post(webhook, json=data)
