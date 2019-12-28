@@ -58,7 +58,21 @@ def send_to_webhook(subject: str, content: str) -> requests.models.Response:
     return requests.post(webhook, json=data)
 
 
-@tl.job(interval=timedelta(seconds=10))
+def split_message(message: str) -> List[str]:
+    parts = []
+    lines = message.split('\n')
+    part = ''
+    for line in lines:
+        if len(part + line) < 2000:
+            part += line
+        else:
+            parts.append(part)
+            part = line
+    parts.append(part)
+    return parts
+
+
+@tl.job(interval=timedelta(seconds=1800))
 def main() -> None:
     with open('token.pickle', 'rb') as token:
         credentials = pickle.load(token)
@@ -69,9 +83,16 @@ def main() -> None:
     for message in messages:
         subject, content = get_content(message)
         log.info('Found new message', subject=subject)
-        response = send_to_webhook(subject, content)
+        if len(content) < 2000:
+            response = send_to_webhook(subject, content)
+        else:
+            parts = split_message(content)
+            for part in parts:
+                response = send_to_webhook(subject, part)
         if response.status_code == 204:
             mark_as_read(service, message)
+        else:
+            log.error(f'Error while sending to Discord: {response.status_code} {response.content}')
 
 
 if __name__ == '__main__':
