@@ -58,5 +58,23 @@ vim .env
 # DISCORD_WEBHOOK = 'https://discordapp.com/api/webhooks/xxxx/yyyyyyy'
 ```
 
-6. If everything went fine, you should now be able to launch `get_tricks.py`. Keep it running with a systemd service or nohup to receive your PyTricks on Discord :D
-``` nohup python3 get_tricks.py & ```
+6. If everything went fine, you should now be able to run `python get_tricks.py`. You can keep it running by creating a dedicated systemd service:
+
+An example of `/etc/systemd/system/pytricks.service` file for a cloned repository located at `/home/patate/pytricks-discord-bot`:
+```
+[Unit]
+Description=PyTricks service
+After=multi-user.target
+
+[Service]
+Type=idle
+WorkingDirectory=/home/patate/pytricks-discord-bot/
+ExecStart=/usr/bin/python3 /home/patate/pytricks-discord-bot/get_tricks.py
+Restart=on-failure
+RestartSec=60s
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Start your service by running `systemctl start pytricks.service` and receive your PyTricks on Discord :D
