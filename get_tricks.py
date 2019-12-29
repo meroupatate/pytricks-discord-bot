@@ -54,8 +54,14 @@ def mark_as_read(service: googleapiclient.discovery.Resource, message: Dict) -> 
 def send_to_webhook(subject: str, content: str) -> requests.models.Response:
     subject = subject.replace('_', '\_').replace('*', '\*')
     data = {'content': f'**{subject}**\n```python\n{content.split("------")[0]}```\n'}
-    log.info('Sent to discord', subject=subject)
-    return requests.post(webhook, json=data)
+    if len(data) < 2000:
+        response = requests.post(webhook, json=data)
+    else:
+        parts = split_message(data)
+        response = requests.post(webhook, json=parts[0])
+        for part in parts[1:]:
+            requests.post(webhook, json=part)
+    return response
 
 
 def split_message(message: str) -> List[str]:
@@ -83,13 +89,10 @@ def main() -> None:
     for message in messages:
         subject, content = get_content(message)
         log.info('Found new message', subject=subject)
-        if len(content) < 2000:
-            response = send_to_webhook(subject, content)
-        else:
-            parts = split_message(content)
-            for part in parts:
-                response = send_to_webhook(subject, part)
+        response = send_to_webhook(subject, content)
+
         if response.status_code == 204:
+            log.info('Sent to discord', subject=subject)
             mark_as_read(service, message)
         else:
             log.error(f'Error while sending to Discord: {response.status_code} {response.content}')
